@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "@wolfgang42/feepsearch-datasource-devdocs",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22",
+    "jsdom": "^25.0.0"
+  }
+}

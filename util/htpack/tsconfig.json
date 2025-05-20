@@ -1,0 +1,12 @@
+{
+    "extends": [
+        "@tsconfig/recommended/tsconfig.json",
+        "@tsconfig/strictest/tsconfig.json",
+        "@tsconfig/node22/tsconfig.json",
+    ],
+    "compilerOptions": {
+        "noEmit": true,
+        "allowImportingTsExtensions": true, // For use with `node --experimental-strip-types`
+        "outDir": "dist/",
+    },
+}

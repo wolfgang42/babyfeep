@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "name": "@wolfgang42/feepsearch-htpack",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/recommended": "^1.0.7",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/node": "^22.6.0",
+    "htmlparser2": "^9.1.0",
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "install": "node --experimental-strip-types --disable-warning=ExperimentalWarning ./structs.gen.ts"
+  }
+}

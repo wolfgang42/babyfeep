@@ -10,6 +10,7 @@ pkgs.mkShell {
       cacert
       curl
       jq
+      nodejs_22
       wget
       ;
   };
