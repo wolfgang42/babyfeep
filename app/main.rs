@@ -1,0 +1,62 @@
+use maud::html;
+use url::Url;
+use tiny_http::{Server, Response, Method};
+
+fn main() {
+	let server = Server::http("0.0.0.0:4000").unwrap();
+	println!("Server running on http://0.0.0.0:4000/");
+
+	for request in server.incoming_requests() {
+		if *request.method() != Method::Get {
+			let response = Response::from_string("Method Not Allowed").with_status_code(405);
+			request.respond(response).unwrap();
+			continue;
+		}
+		let response = if request.url() == "/" {
+			Response::from_string(html! {
+				(maud::DOCTYPE)
+				html {
+					head {
+						meta charset="utf-8";
+						meta name="viewport" content="width=device-width, initial-scale=1";
+						title { "Baby Feep!" }
+					}
+					body {
+						h1 { "Baby Feep!" }
+						form action="/search" method="GET" {
+							input type="text" name="q" placeholder="Search..." required;
+							input type="submit" value="Search";
+						} 
+					}
+				}
+			}).with_header(
+				tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html"[..]).unwrap()
+			)
+		} else if request.url().starts_with("/search?") {
+			let url = Url::parse("http://example.com").unwrap().join(request.url()).unwrap();
+			let q = url.query_pairs().find(|(k, _)| k == "q").map(|(_, v)| v).unwrap_or_default();
+			Response::from_string(html! {
+				(maud::DOCTYPE)
+				html {
+					head {
+						meta charset="utf-8";
+						meta name="viewport" content="width=device-width, initial-scale=1";
+						title { "Baby Feep!" }
+					}
+					body {
+						h1 { "Baby Feep!" }
+						form action="/search" method="GET" {
+							input type="text" name="q" value=(q) placeholder="Search..." required;
+							input type="submit" value="Search";
+						} 
+					}
+				}
+			}).with_header(
+				tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html"[..]).unwrap()
+			)
+		} else {
+			Response::from_string(request.url()).with_status_code(404)
+		};
+		request.respond(response).unwrap();
+	}
+}

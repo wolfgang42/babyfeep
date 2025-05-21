@@ -1,0 +1,15 @@
+[package]
+name = "feep-app"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+maud = "0.26.0"
+tiny_http = "0.12"
+url = "2.5.4"
+
+[[bin]]
+name = "babyfeep-server"
+path = "main.rs"
