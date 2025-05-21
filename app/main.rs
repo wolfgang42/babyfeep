@@ -1,3 +1,5 @@
+mod lookup;
+
 use maud::html;
 use url::Url;
 use tiny_http::{Server, Response, Method};
@@ -48,7 +50,13 @@ fn main() {
 						form action="/search" method="GET" {
 							input type="text" name="q" value=(q) placeholder="Search..." required;
 							input type="submit" value="Search";
-						} 
+						}
+						div {
+							@let results = lookup::get_results(q.as_ref()).unwrap();
+							@for result in results {
+								p { a href=(result.url) { (result.title) } }
+							}
+						}
 					}
 				}
 			}).with_header(
