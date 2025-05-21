@@ -5,11 +5,18 @@ use url::Url;
 use tiny_http::{Server, Response, Method};
 
 fn main() {
+	println!("Start: v{}", env!("CARGO_PKG_VERSION"));
 	let index = lookup::SearchIndex::new().unwrap();
 
 	let server = Server::http("0.0.0.0:4000").unwrap();
 
 	for request in server.incoming_requests() {
+		let headers = request.headers();
+		let useragent = headers.iter()
+			.find(|h| h.field.equiv("User-Agent"))
+			.map(|h| h.value.as_str())
+			.unwrap_or("unknown");
+		println!("Req: {} {} {} {}", request.remote_addr().unwrap(), request.method(), request.url(), useragent);
 		if *request.method() != Method::Get {
 			let response = Response::from_string("Method Not Allowed").with_status_code(405);
 			request.respond(response).unwrap();
