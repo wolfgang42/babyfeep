@@ -24,7 +24,7 @@ impl SearchIndex {
 	pub fn num_docs(&self) -> u64 {
 		self.reader.searcher().num_docs()
 	}
-	pub fn get_results(&self, query: &str) -> Result<Vec<SearchResult>, anyhow::Error> {
+	pub fn get_results(&self, query: &str) -> Result<(usize, Vec<SearchResult>), anyhow::Error> {
 		let searcher = self.reader.searcher();
 		// TODO depending on field offsets seems awkward
 		let field_url = tantivy::schema::Field::from_field_id(0);
@@ -35,7 +35,10 @@ impl SearchIndex {
 		]);
 		let query = query_parser.parse_query(query)?;
 		let snippeter = tantivy::snippet::SnippetGenerator::create(&searcher, &query, field_body)?;
-		let top_docs = searcher.search(&query, &tantivy::collector::TopDocs::with_limit(10))?;
+		let (doc_count, top_docs) = searcher.search(&query, &(
+			tantivy::collector::Count,
+			tantivy::collector::TopDocs::with_limit(10),
+		))?;
 		let results = top_docs.iter().map(|(_score, doc_address)| {
 			let retrieved_doc: TantivyDocument = searcher.doc(*doc_address).unwrap();
 			let url = retrieved_doc.get_first(field_url).unwrap().as_str().unwrap();
@@ -47,6 +50,6 @@ impl SearchIndex {
 				snippet,
 			}
 		}).collect::<Vec<_>>();
-		Ok(results)
+		Ok((doc_count, results))
 	}
 }

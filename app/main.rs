@@ -48,6 +48,9 @@ fn main() {
 		} else if request.url().starts_with("/search?") {
 			let url = Url::parse("http://example.com").unwrap().join(request.url()).unwrap();
 			let q = url.query_pairs().find(|(k, _)| k == "q").map(|(_, v)| v).unwrap_or_default();
+			let start = std::time::Instant::now();
+			let (doc_count, results) = index.get_results(q.as_ref()).unwrap();
+			let elapsed = start.elapsed();
 			Response::from_string(html! {
 				(maud::DOCTYPE)
 				html {
@@ -62,8 +65,11 @@ fn main() {
 							input type="text" name="q" value=(q) placeholder="Search..." required;
 							input type="submit" value="Search";
 						}
+						p {
+							"Found " (comma_thousands(doc_count.try_into().unwrap())) { " results in " }
+							(PreEscaped(elapsed.as_millis().to_string())) { " ms" }
+						}
 						div {
-							@let results = index.get_results(q.as_ref()).unwrap();
 							@for result in results {
 								p {
 									a href=(result.url) { (result.title) }
