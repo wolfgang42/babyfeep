@@ -1,6 +1,6 @@
 mod lookup;
 
-use maud::html;
+use maud::{html, PreEscaped};
 use url::Url;
 use tiny_http::{Server, Response, Method};
 
@@ -58,7 +58,10 @@ fn main() {
 						div {
 							@let results = index.get_results(q.as_ref()).unwrap();
 							@for result in results {
-								p { a href=(result.url) { (result.title) } }
+								p {
+									a href=(result.url) { (result.title) }
+									(PreEscaped(result.snippet.to_html()))
+								}
 							}
 						}
 					}

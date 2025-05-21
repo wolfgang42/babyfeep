@@ -11,6 +11,7 @@ pub struct SearchIndex {
 pub struct SearchResult {
 	pub url: String,
 	pub title: String,
+	pub snippet: tantivy::snippet::Snippet,
 }
 
 impl SearchIndex {
@@ -33,14 +34,17 @@ impl SearchIndex {
 			field_title, field_body,
 		]);
 		let query = query_parser.parse_query(query)?;
+		let snippeter = tantivy::snippet::SnippetGenerator::create(&searcher, &query, field_body)?;
 		let top_docs = searcher.search(&query, &tantivy::collector::TopDocs::with_limit(10))?;
 		let results = top_docs.iter().map(|(_score, doc_address)| {
 			let retrieved_doc: TantivyDocument = searcher.doc(*doc_address).unwrap();
 			let url = retrieved_doc.get_first(field_url).unwrap().as_str().unwrap();
 			let title = retrieved_doc.get_first(field_title).unwrap().as_str().unwrap();
+			let snippet = snippeter.snippet_from_doc(&retrieved_doc);
 			SearchResult {
 				url: url.to_string(),
 				title: title.to_string(),
+				snippet,
 			}
 		}).collect::<Vec<_>>();
 		Ok(results)
