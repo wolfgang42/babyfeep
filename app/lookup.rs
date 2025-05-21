@@ -20,6 +20,9 @@ impl SearchIndex {
 		let reader = index.reader()?;
 		Ok(SearchIndex { index, reader })
 	}
+	pub fn num_docs(&self) -> u64 {
+		self.reader.searcher().num_docs()
+	}
 	pub fn get_results(&self, query: &str) -> Result<Vec<SearchResult>, anyhow::Error> {
 		let searcher = self.reader.searcher();
 		// TODO depending on field offsets seems awkward

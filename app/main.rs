@@ -29,7 +29,10 @@ fn main() {
 						form action="/search" method="GET" {
 							input type="text" name="q" placeholder="Search..." required;
 							input type="submit" value="Search";
-						} 
+						}
+						p {
+							"Searching " (comma_thousands(index.num_docs())) { " documents" }
+						}
 					}
 				}
 			}).with_header(
@@ -64,8 +67,18 @@ fn main() {
 				tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html"[..]).unwrap()
 			)
 		} else {
-			Response::from_string(request.url()).with_status_code(404)
+			Response::from_string("Not found").with_status_code(404)
 		};
 		request.respond(response).unwrap();
 	}
+}
+
+fn comma_thousands(num: u64) -> String {
+	let mut s = num.to_string();
+	let mut i = s.len() as i64 - 3;
+	while i > 0 {
+		s.insert(i as usize, ',');
+		i -= 3;
+	}
+	s
 }
