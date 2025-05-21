@@ -5,8 +5,9 @@ use url::Url;
 use tiny_http::{Server, Response, Method};
 
 fn main() {
+	let index = lookup::SearchIndex::new().unwrap();
+
 	let server = Server::http("0.0.0.0:4000").unwrap();
-	println!("Server running on http://0.0.0.0:4000/");
 
 	for request in server.incoming_requests() {
 		if *request.method() != Method::Get {
@@ -52,7 +53,7 @@ fn main() {
 							input type="submit" value="Search";
 						}
 						div {
-							@let results = lookup::get_results(q.as_ref()).unwrap();
+							@let results = index.get_results(q.as_ref()).unwrap();
 							@for result in results {
 								p { a href=(result.url) { (result.title) } }
 							}
