@@ -3,6 +3,25 @@
 derived from the source code of its slightly bigger brother
 [Feep! Search](https://search.feep.dev/).
 
+* [Architecture](#architecture)
+  + [General philosophy](#general-philosophy)
+      - [Data directories](#data-directories)
+  + [Crawler](#crawler)
+      - [Data from devdocs.io](#data-from-devdocsio)
+      - [Live crawl](#live-crawl)
+        * [Proxy use](#proxy-use)
+  + [Preprocessing](#preprocessing)
+  + [Index](#index)
+      - [Considerations for library selection](#considerations-for-library-selection)
+* [Ranking](#ranking)
+  + [Frontend](#frontend)
+* [Installation and deployment](#installation-and-deployment)
+  + [Setup](#setup)
+  + [Testing](#testing)
+  + [Production deployment](#production-deployment)
+      - [Crawl and build servers](#crawl-and-build-servers)
+      - [Web servers](#web-servers)
+
 ## Architecture
 
 ### General philosophy
