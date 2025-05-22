@@ -8,6 +8,7 @@ node() { # TODO this is not necessary in Node 23+
 }
 
 tmpdir="$(mktemp -d data/XXXXXXXX.tmp)"
+trap 'rm -rf "$tmpdir"' EXIT
 
 # Put all of the htpack files in one place so we can do our work without worrying about
 # another process fiddling with the chunk list while we're processing it.
@@ -22,29 +23,27 @@ indexname="$(echo "$tmpdir"/*.htpack | sort | xargs getfattr --only-values -n us
 
 rm -rf "data/index-$indexname.tmp" # In case we got interrupted in the middle of the build
 
-if [ -e "data/index-$indexname" ]; then
-	ln -fs "index-$indexname" data/index # Probably already right, but just in case we missed the link step
-	rm -rf "$tmpdir"
-	exit 0 # Already built
+if [ ! -e "data/index-$indexname" ]; then
+	cp -r index_template/ "data/index-$indexname.tmp/" # Create index
+	mkdir "data/index-$indexname.tmp/htpack/"
+
+	ls -1 "$tmpdir" | while read -r f; do
+		echo "$(basename "$f")" >&2
+		# Output data to index
+		node ./dump_htpack.ts <"$tmpdir/$f"
+		# Bundle a copy of the htpack file with the index for debugging
+		# (and, in the future, for things like syntax highlighting)
+		mv "$tmpdir/$f" "data/index-$indexname.tmp/htpack/"
+	done \
+	| tantivy index -i "data/index-$indexname.tmp/"
+
+	touch "data/index-$indexname.tmp/feep.lock" # Create lock file which will be used to prevent accidental GC
+
+	rmdir "$tmpdir"
+	mv "data/index-$indexname"{.tmp,}
 fi
-
-cp -r index_template/ "data/index-$indexname.tmp/" # Create index
-mkdir "data/index-$indexname.tmp/htpack/"
-
-ls -1 "$tmpdir" | while read -r f; do
-	echo "$(basename "$f")" >&2
-	# Output data to index
-	node ./dump_htpack.ts <"$tmpdir/$f"
-	# Bundle a copy of the htpack file with the index for debugging
-	# (and, in the future, for things like syntax highlighting)
-	mv "$tmpdir/$f" "data/index-$indexname.tmp/htpack/"
-done \
-| tantivy index -i "data/index-$indexname.tmp/"
-
-touch "data/index-$indexname.tmp/feep.lock" # Create lock file which will be used to prevent accidental GC
-
-rmdir "$tmpdir"
-mv "data/index-$indexname"{.tmp,}
+# Create a symlink to the current index
+# (Do this even if we had the index already, just in case we crashed at precisely the wrong moment last time.)
 ln -fs "index-$indexname" data/index
 
 # Garbage collect old indexes
