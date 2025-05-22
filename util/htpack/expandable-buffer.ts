@@ -5,7 +5,7 @@ import type {Struct} from "./structs.ts"
 //       which may not be appropriate outside of the html parser it was designed for.
 export class ExpandableBuffer {
 	private length = 0
-	private readonly buf = new ArrayBuffer(10 * 1024 * 1024) // TODO make smaller when ArrayBuffer.resize() is available
+	private readonly buf = new ArrayBuffer(10 * 1024 * 1024, {maxByteLength: 1024 * 1024 * 1024}) // TODO make smaller when ArrayBuffer.resize() is available
 	private readonly u8 = new Uint8Array(this.buf)
 	private readonly dv = new DataView(this.buf)
 
@@ -18,10 +18,7 @@ export class ExpandableBuffer {
 		let newLen = this.buf.byteLength
 		while (newLen < this.length) {newLen *= 2}
 		if (newLen != this.buf.byteLength) {
-			// TODO this should use ArrayBuffer.resize(), but that's not available until Node 20
-			// (We can't just create new buffers and copy the data over, because there will be
-			// references to the old buffer in the wild.)
-			throw new Error('not implemented')
+			this.buf.resize(newLen)
 		}
 	}
 
