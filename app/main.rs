@@ -5,8 +5,16 @@ use url::Url;
 use tiny_http::{Server, Response, Method};
 
 fn main() {
-	println!("Start: v{}", env!("CARGO_PKG_VERSION"));
-	let index = lookup::SearchIndex::new().unwrap();
+	let index_path = std::env::args().nth(1).unwrap_or_else(|| {
+		panic!("Usage: {} <index_path>", std::env::args().next().unwrap());
+	});
+	// Resolve index symlink, so the index we're reading from doesn't change under us
+	let index_path = std::fs::canonicalize(index_path).unwrap_or_else(|_| {
+		panic!("Error: Could not resolve index path");
+	});
+
+	println!("Start: v{} {:?}", env!("CARGO_PKG_VERSION"), index_path);
+	let index = lookup::SearchIndex::new(&index_path).unwrap();
 
 	let server = Server::http("0.0.0.0:4000").unwrap();
 

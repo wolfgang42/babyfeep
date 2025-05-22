@@ -1,3 +1,4 @@
+use std::os::fd::AsRawFd;
 use anyhow::Result;
 use tantivy::IndexReader;
 use tantivy::TantivyDocument;
@@ -15,8 +16,32 @@ pub struct SearchResult {
 }
 
 impl SearchIndex {
-	pub fn new() -> Result<SearchIndex, anyhow::Error> {
-		let indexdir = tantivy::directory::MmapDirectory::open("../tantivy/data/index")?;
+	pub fn new(index_path: &std::path::PathBuf) -> Result<SearchIndex, anyhow::Error> {
+		// Lock the index
+		let index_lock = std::fs::File::open(index_path.join("feep.lock")).unwrap_or_else(|_| {
+			panic!("Error: Could not open index lock file");
+		});
+		// Acquire a flock(2)-based lock on the index. Shared, so multiple readers can
+		// access it at once; non-blocking, because if someone has an exclusive lock on it,
+		// it's the GC in tantivy/build.sh which will be in the process of deleting the index!
+		// In the unlikely event we hit that race condition, the best thing to do is to
+		// exit and be restarted, at which point we'll see the new index and all will be well.
+		// (There's a more complicated scheme to avoid this, where we take a separate lock
+		// while resolving the symlink, but it doesn't seem worth it.)
+		// NOTE: Rust has File.lock_shared() as an experimental feature, but it doesn't provide
+		// particularly helpful guarantees, so for the moment we use libc directly.
+		// SAFETY: this is a straightforward function which fortunately doesn't have much to go wrong.
+		if unsafe{libc::flock(index_lock.as_raw_fd(), libc::LOCK_SH|libc::LOCK_NB)} != 0 {
+			panic!("Error: Could not lock index");
+		}
+		// We leak the file descriptor and associated lock, but that's fine because
+		// we want it to stay locked until the process exits anyway, at which point
+		// the OS will clean it up for us.
+		// (TODO implement Drop for SearchIndex instead.)
+		std::mem::forget(index_lock);
+
+		// Open the index
+		let indexdir = tantivy::directory::MmapDirectory::open(index_path)?;
 		let index = tantivy::Index::open(indexdir)?;
 		let reader = index.reader()?;
 		Ok(SearchIndex { index, reader })

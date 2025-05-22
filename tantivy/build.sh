@@ -40,9 +40,20 @@ ls -1 "$tmpdir" | while read -r f; do
 done \
 | tantivy index -i "data/index-$indexname.tmp/"
 
+touch "data/index-$indexname.tmp/feep.lock" # Create lock file which will be used to prevent accidental GC
+
 rmdir "$tmpdir"
 mv "data/index-$indexname"{.tmp,}
 ln -fs "index-$indexname" data/index
 
-# TODO garbage collect old indexes
-#      (However, we need to make sure we don't delete an index out from under a running server.)
+# Garbage collect old indexes
+for i in data/index-*; do
+	# Skip the current index
+	[ "$i" = "data/index-$indexname" ] && continue
+	# Take out an exclusive lock on the index before deleting it
+	# so that we don't delete it out from under a running server;
+	# see SearchIndex::new() for the other side of this.
+	# Non-blocking so we just skip any indexes still in use.
+	flock --exclusive --nonblock "$i/feep.lock" \
+		rm -rf "$i" || true
+done

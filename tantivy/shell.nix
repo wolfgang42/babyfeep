@@ -7,6 +7,7 @@ pkgs.mkShell {
   buildInputs = builtins.attrValues {
     inherit (pkgs)
       attr
+      flock
       nodejs_22
       xxd
       ;
