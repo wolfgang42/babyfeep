@@ -54,7 +54,13 @@ export async function* output_htpack(source: AsyncIterable<Page>) {
 	yield filemetadata
 
 	for await (const page of source) {
-		yield* page_to_htpack(page)
+		try {
+			yield* page_to_htpack(page)
+		} catch (cause) {
+			// TODO ignoring errors like this isn't great, but it gets us more pages in the web crawl.
+			// This is, however, a significant hack for doing so.
+			console.error(`Error while converting to htpack: ${page.url}`, {cause})
+		}
 	}
 }
 
