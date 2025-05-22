@@ -13,8 +13,8 @@ derived from the source code of its slightly bigger brother
   + [Preprocessing](#preprocessing)
   + [Index](#index)
       - [Considerations for library selection](#considerations-for-library-selection)
-* [Ranking](#ranking)
   + [Frontend](#frontend)
+* [Ranking](#ranking)
 * [Installation and deployment](#installation-and-deployment)
   + [Setup](#setup)
   + [Testing](#testing)
@@ -134,6 +134,16 @@ Additionally, the internals of Feep! are structured around CLI scripts that rece
 Tantivy fits well into this structure; ElasticSearch’s separate server and cluster management
 (which Vespa appears to share) have been a source of friction throughout Feep!’s development.
 
+### Frontend
+The frontend is a hastily thrown together Rust server;
+it uses `tiny_http` and `maud` and is single-threaded
+(other than the threads that Tantivy sets up internally)
+because that was the simplest thing that worked.
+
+I didn't bother to style (or even properly format) the results;
+look at [search.feep.dev](https://search.feep.dev) if you want to see
+the stylesheet I would have copy-pasted.
+
 ## Ranking
 This is by far the most complicated part of building a search engine (crawling notwithstanding);
 [entire academic conferences](https://trec.nist.gov/) exist about it and it’s still not a solved problem.
@@ -175,16 +185,6 @@ most have not and were culled from my notes for future investigation.
     into one result with a version selector.
   * Topic modeling and latent semantic analysis of results, to help users specify “when I said ‘Apache Arrow’ I meant the open source project, not the indigenous knapped flint”
   * Page info bar, StackOverflow embed, and other rich results
-
-### Frontend
-The frontend is a hastily thrown together Rust server;
-it uses `tiny_http` and `maud` and is single-threaded
-(other than the threads that Tantivy sets up internally)
-because that was the simplest thing that worked.
-
-I didn't bother to style (or even properly format) the results;
-look at [search.feep.dev](https://search.feep.dev) if you want to see
-the stylesheet I would have copy-pasted.
 
 ## Installation and deployment
 Feep! uses [Nix](https://nixos.org/) to manage dependencies,
