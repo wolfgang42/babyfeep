@@ -13,6 +13,7 @@ tmpdir="$(mktemp -d data/XXXXXXXX.tmp)"
 # another process fiddling with the chunk list while we're processing it.
 # (HTPack files are written atomically and never modified, so it's safe to share them with a hardlink.)
 find ../datasource/devdocs/data/derive/ -name '*.htpack' | xargs -r sh -c 'cp --link "$@" '"$tmpdir"
+find ../datasource/web/data/derive/htpack/ -name '*.htpack' | xargs -r sh -c 'cp --link "$@" '"$tmpdir"
 
 # Come up with a unique stable identifer, by combining all of the hashes.
 # This way if any of the htpack files change we will rebuild the index.

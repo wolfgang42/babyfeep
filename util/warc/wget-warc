@@ -1,0 +1,9 @@
+#!/bin/bash
+# USAGE: wget-warc <warc file prefix> <wget args>...
+
+set -eu -o pipefail
+
+warcprefix="$1"
+shift
+
+wget -O /dev/null --warc-file="$warcprefix-$(date +'%F_%H-%M-%S')" --warc-cdx --no-verbose "$@"

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Takes the list of URLS to download on stdin, and passes to wget only the ones that aren't already downloaded
+# USAGE: wget-warc-ifnew <warc file prefix> <wget args>...
+
+set -eu -o pipefail
+
+warcprefix="$1"
+shift
+
+(
+	if compgen -G "$warcprefix*.cdx" >/dev/null; then
+		export LC_ALL=C
+		# NOTE: this assumes the first field of the CDX is the URL; wget happens to hard-code this so it works.
+		comm -13 \
+			<(cut -d' ' -f1 "$warcprefix"*.cdx | sort -u) \
+			<(sort -u)
+	else
+		cat
+	fi
+) | "$(dirname "$0")"/wget-warc "$warcprefix" --input-file=- "$@"
